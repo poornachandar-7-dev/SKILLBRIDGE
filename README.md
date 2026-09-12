@@ -1,8 +1,23 @@
 # SkillBridge
+
 ### Academia–Industry Skill Collaboration & Employability Platform
+
 **Assess skills. Identify gaps. Improve. Connect with opportunities.**
 
-🔗 **Live Demo:** [skill-bridge-mvp--puthijoshith.replit.app](https://skill-bridge-mvp--puthijoshith.replit.app/)
+**Team:** CORE ANALYTICS
+
+---
+
+## 👨‍💻 Team CORE ANALYTICS
+
+| Name |
+|---|
+| Sivalanka Poornachandar |
+| Gollangi Hemalatha |
+| Butu Divya |
+| Patnayakuni Hanisha |
+| Gummala Bharath |
+| Puthi Sai Joshith Reddy |
 
 ---
 
@@ -30,8 +45,9 @@
 
 SkillBridge delivers a continuous skill-first journey:
 
-```text
-Assessment ➔ Skill Profile ➔ Skill Gap Analysis ➔ Targeted Improvement ➔ Opportunity Matching ➔ Company Screening ➔ Application ➔ Progress Tracking & Badges
+```
+Assessment → Skill Profile → Skill Gap Analysis → Targeted Improvement
+    → Opportunity Matching → Company Screening → Application → Progress Tracking & Badges
 ```
 
 ### What Makes SkillBridge Different?
@@ -109,14 +125,14 @@ A role-aware signup and login system:
 
 ## 🏗️ System Architecture
 
-```text
- Client Layer (Modern React 19 + Vite SPA, Tailwind CSS, Lucide Icons, Legacy HTML Templates)
+```
+Client Layer (React 19 + Vite SPA, Tailwind CSS, Lucide Icons, Legacy HTML Templates)
                                         │
                                         ▼ HTTPS / REST
- API Gateway & Security Layer (FastAPI Router, JWT Bearer Auth, bcrypt Hashing, RBAC Middleware)
+API Gateway & Security Layer (FastAPI Router, JWT Bearer Auth, bcrypt Hashing, RBAC Middleware)
                                         │
                                         ▼ Authorized Calls
- Application Service Layer:
+Application Service Layer:
    ├── Assessment Engine & Auto-Scoring
    ├── Skill Gap & Matching Algorithm
    ├── Company Screening Test Service
@@ -125,8 +141,8 @@ A role-aware signup and login system:
    └── Institution Cohort Analytics
                                         │
                                         ▼ SQL
- Data Layer (SQLite Database: users, skills, student_skills, opportunities, applications,
-              screening_tests, screening_questions, screening_attempts, student_gamification)
+Data Layer (SQLite Database: users, skills, student_skills, opportunities, applications,
+             screening_tests, screening_questions, screening_attempts, student_gamification)
 ```
 
 ---
@@ -142,7 +158,7 @@ A role-aware signup and login system:
 
 ## 📁 Repository Structure
 
-```text
+```
 SkillBridge-MVP/
 ├── backend/                        # Python FastAPI application (core backend)
 │   ├── __init__.py                 # Python package initialization
@@ -211,32 +227,21 @@ This script automatically:
 
 #### Backend Setup:
 ```bash
-# Navigate to backend
 cd backend
-
-# Create virtual environment
 python -m venv venv
 # Windows:
 venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
-# Install dependencies
 pip install -r ../requirements.txt
-
-# Run FastAPI server
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 #### Frontend Setup (Development):
 ```bash
-# Navigate to frontend
 cd frontend
-
-# Install dependencies
 pnpm install
-
-# Run Vite dev server
 pnpm run dev
 ```
 
@@ -249,7 +254,6 @@ pnpm --filter @workspace/skillbridge-app run build
 
 ## 🧪 Running Automated Tests
 
-Run the comprehensive end-to-end integration test suite:
 ```bash
 python backend/test_e2e_features.py
 ```
@@ -312,9 +316,28 @@ A student applies for a **Backend Python Developer** internship requiring Python
 - **Verified Portfolio Evidence:** Upload and verify GitHub repositories, live demo URLs, and project artifacts.
 - **Peer Skill Benchmarking:** Cohort comparison charts visualizing individual percentiles against peer distributions.
 - **Curriculum Recommendation Engine:** Automated academic syllabus recommendations based on hiring trends.
+- **Interest-Based Course Suggestions:** Recommends courses/resources matched to declared interests and current skill gaps.
+- **Database Scale-Up:** Migration path from SQLite to PostgreSQL for higher concurrency and larger cohorts.
+
+---
+
+## 🤝 Contributing & Collaborators
+
+- Team members are added as **GitHub collaborators** with repository access.
+- To request access, contact the repo owner with your GitHub username.
+- Create a feature branch, commit your changes, and open a Pull Request for review before merging into `main`.
+
+```bash
+git checkout -b feature/<your-feature-name>
+git commit -m "Add: <short description>"
+git push origin feature/<your-feature-name>
+```
 
 ---
 
 ## 📄 License & Team
 
-Built with ❤️ for academia–industry collaboration and employability enablement.
+Built with ❤️ by **Team CORE ANALYTICS** for academia–industry collaboration and employability enablement.
+
+**Team Members:**
+Sivalanka Poornachandar · Gollangi Hemalatha · Butu Divya · Patnayakuni Hanisha · Gummala Bharath · Puthi Sai Joshith Reddy
