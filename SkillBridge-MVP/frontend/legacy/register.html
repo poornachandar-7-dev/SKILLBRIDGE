@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge — Multi-Step Registration</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 36px 32px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.04);
+            border: 1px solid var(--border);
+        }
+
+        .brand-eyebrow {
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 6px;
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Stepper Progress Bar */
+        .stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: var(--text-muted);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .step-item.active .step-circle {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 4px #dbeafe;
+        }
+
+        .step-item.completed .step-circle {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 6px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-item.active .step-label {
+            color: var(--primary);
+        }
+
+        .stepper-line {
+            position: absolute;
+            top: 16px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
+
+        .stepper-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* Form Controls */
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            background: #ffffff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px #dbeafe;
+        }
+
+        /* Password Strength Meter */
+        .password-meter-wrap {
+            margin-top: 8px;
+        }
+
+        .password-meter-bar {
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .password-meter-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.25s, background-color 0.25s;
+        }
+
+        .password-strength-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Gender & Role Selector Cards */
+        .pill-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .pill-option {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: pointer;
+            text-align: left;
+            background: #ffffff;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .pill-option:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .pill-option.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .pill-option input[type="radio"] {
+            display: none;
+        }
+
+        .role-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .role-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        /* Buttons */
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .footer-links {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="brand-eyebrow">SkillBridge · Multi-Step Onboarding</div>
+            <h1>Create your bridge</h1>
+            <p class="subtitle">Join the academia-industry skill network. Build evidence, track gaps, and connect.</p>
+
+            <!-- Stepper -->
+            <div class="stepper">
+                <div class="stepper-line"><div class="stepper-fill" id="stepperFill"></div></div>
+                <div class="step-item active" id="stepBadge1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Account</div>
+                </div>
+                <div class="step-item" id="stepBadge2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Details</div>
+                </div>
+                <div class="step-item" id="stepBadge3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Role</div>
+                </div>
+            </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <form id="multiStepForm">
+                <!-- STEP 1: Account Credentials -->
+                <div class="form-step active" id="step1">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" required placeholder="e.g. alex@example.com" autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password (minimum 6 characters)</label>
+                        <input type="password" id="password" required minlength="6" placeholder="Choose a secure password" autocomplete="new-password">
+                        <div class="password-meter-wrap">
+                            <div class="password-meter-bar">
+                                <div class="password-meter-fill" id="meterFill"></div>
+                            </div>
+                            <div class="password-strength-text">
+                                <span id="strengthText">Enter password</span>
+                                <span id="charCount">0/6 min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm your password" autocomplete="new-password">
+                    </div>
+
+                    <div class="button-row">
+                        <button type="button" class="btn-primary" id="btnNext1">Next: Personal Details →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Personal Details (Name, Age, Gender) -->
+                <div class="form-step" id="step2">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required placeholder="e.g. Alex Rivera" autocomplete="name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" min="14" max="100" placeholder="e.g. 21" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <div class="pill-grid">
+                            <label class="pill-option selected" id="genderOptionMale">
+                                <input type="radio" name="gender" value="Male" checked>
+                                <div class="role-title">Male</div>
+                            </label>
+                            <label class="pill-option" id="genderOptionFemale">
+                                <input type="radio" name="gender" value="Female">
+                                <div class="role-title">Female</div>
+                            </label>
+                            <label class="pill-option" id="genderOptionOther">
+                                <input type="radio" name="gender" value="Other">
+                                <div class="role-title">Other</div>
+                            </label>
+                            <label class="pill-option" id="genderOptionPreferNot">
+                                <input type="radio" name="gender" value="Prefer not to say">
+                                <div class="role-title">Prefer not to say</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="button" class="btn-secondary" id="btnBack2">← Back</button>
+                        <button type="button" class="btn-primary" id="btnNext2">Next: Choose Role →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Role Selection & Final Submit -->
+                <div class="form-step" id="step3">
+                    <div class="form-group">
+                        <label>I am joining SkillBridge as</label>
+                        <div class="pill-grid">
+                            <label class="pill-option selected" id="roleStudent">
+                                <input type="radio" name="role" value="student" checked>
+                                <div class="role-title">Student</div>
+                                <div class="role-desc">Assess skills, discover gaps, take screening tests & earn XP.</div>
+                            </label>
+                            <label class="pill-option" id="roleIndustry">
+                                <input type="radio" name="role" value="industry">
+                                <div class="role-title">Industry</div>
+                                <div class="role-desc">Post opportunities, configure screening tests & evaluate candidates.</div>
+                            </label>
+                            <label class="pill-option" id="roleInstitution">
+                                <input type="radio" name="role" value="institution">
+                                <div class="role-title">Institution</div>
+                                <div class="role-desc">View cohort readiness, common gaps, and curriculum signals.</div>
+                            </label>
+                            <label class="pill-option" id="roleAcademician">
+                                <input type="radio" name="role" value="academician">
+                                <div class="role-title">Academician</div>
+                                <div class="role-desc">Coach from shared data and design targeted interventions.</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="button" class="btn-secondary" id="btnBack3">← Back</button>
+                        <button type="submit" class="btn-primary" id="submitBtn">Complete Registration & Start</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="footer-links">
+                Already have an account? <a href="/login">Log In</a>
+                <br><br>
+                <a href="/">← Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+
+        const stepBadge1 = document.getElementById('stepBadge1');
+        const stepBadge2 = document.getElementById('stepBadge2');
+        const stepBadge3 = document.getElementById('stepBadge3');
+        const stepperFill = document.getElementById('stepperFill');
+
+        const alertBox = document.getElementById('alertBox');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showAlert(msg, isSuccess) {
+            alertBox.textContent = msg;
+            alertBox.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+            alertBox.style.display = 'block';
+        }
+
+        function clearAlert() {
+            alertBox.style.display = 'none';
+        }
+
+        // Stepper Navigation
+        function updateStepper() {
+            [step1, step2, step3].forEach((el, idx) => {
+                el.classList.toggle('active', idx + 1 === currentStep);
+            });
+
+            stepBadge1.className = 'step-item ' + (currentStep > 1 ? 'completed' : (currentStep === 1 ? 'active' : ''));
+            stepBadge2.className = 'step-item ' + (currentStep > 2 ? 'completed' : (currentStep === 2 ? 'active' : ''));
+            stepBadge3.className = 'step-item ' + (currentStep === 3 ? 'active' : '');
+
+            stepperFill.style.width = currentStep === 1 ? '0%' : (currentStep === 2 ? '50%' : '100%');
+            clearAlert();
+        }
+
+        // Password Strength Calculation
+        const passwordInput = document.getElementById('password');
+        const meterFill = document.getElementById('meterFill');
+        const strengthText = document.getElementById('strengthText');
+        const charCount = document.getElementById('charCount');
+
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
+            charCount.textContent = `${val.length}/6 min`;
+
+            let score = 0;
+            if (val.length >= 6) score++;
+            if (val.length >= 10) score++;
+            if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+
+            if (val.length === 0) {
+                meterFill.style.width = '0%';
+                strengthText.textContent = 'Enter password';
+                meterFill.style.backgroundColor = '#e2e8f0';
+            } else if (val.length < 6) {
+                meterFill.style.width = '25%';
+                meterFill.style.backgroundColor = 'var(--danger)';
+                strengthText.textContent = 'Too short';
+            } else if (score <= 2) {
+                meterFill.style.width = '50%';
+                meterFill.style.backgroundColor = 'var(--warning)';
+                strengthText.textContent = 'Fair';
+            } else if (score <= 3) {
+                meterFill.style.width = '75%';
+                meterFill.style.backgroundColor = '#3b82f6';
+                strengthText.textContent = 'Good';
+            } else {
+                meterFill.style.width = '100%';
+                meterFill.style.backgroundColor = 'var(--success)';
+                strengthText.textContent = 'Strong';
+            }
+        });
+
+        // Pill selector listeners
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('input[name="gender"]').forEach(r => {
+                    r.closest('.pill-option').classList.toggle('selected', r.checked);
+                });
+            });
+        });
+
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('input[name="role"]').forEach(r => {
+                    r.closest('.pill-option').classList.toggle('selected', r.checked);
+                });
+            });
+        });
+
+        // Step 1 validation & forward
+        document.getElementById('btnNext1').addEventListener('click', () => {
+            clearAlert();
+            const email = document.getElementById('email').value.trim();
+            const password = passwordInput.value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                showAlert('Please provide a valid email address.', false);
+                return;
+            }
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters long.', false);
+                return;
+            }
+            if (password !== confirm) {
+                showAlert('Passwords do not match. Please check again.', false);
+                return;
+            }
+
+            currentStep = 2;
+            updateStepper();
+        });
+
+        // Step 2 back & forward
+        document.getElementById('btnBack2').addEventListener('click', () => {
+            currentStep = 1;
+            updateStepper();
+        });
+
+        document.getElementById('btnNext2').addEventListener('click', () => {
+            clearAlert();
+            const name = document.getElementById('name').value.trim();
+            const ageVal = document.getElementById('age').value;
+            const age = parseInt(ageVal, 10);
+
+            if (!name) {
+                showAlert('Please enter your full name.', false);
+                return;
+            }
+            if (!ageVal || isNaN(age) || age < 14 || age > 100) {
+                showAlert('Please enter a valid age between 14 and 100.', false);
+                return;
+            }
+
+            currentStep = 3;
+            updateStepper();
+        });
+
+        // Step 3 back
+        document.getElementById('btnBack3').addEventListener('click', () => {
+            currentStep = 2;
+            updateStepper();
+        });
+
+        // Final Form Submission
+        document.getElementById('multiStepForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAlert();
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+
+            const payload = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                password: passwordInput.value,
+                age: parseInt(document.getElementById('age').value, 10),
+                gender: document.querySelector('input[name="gender"]:checked')?.value || 'Prefer not to say',
+                role: document.querySelector('input[name="role"]:checked')?.value || 'student'
+            };
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('Account created successfully! Redirecting to login...', true);
+                    setTimeout(() => { window.location.href = '/login'; }, 1200);
+                } else {
+                    showAlert(data.detail || 'Registration failed. Please try again.', false);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Complete Registration & Start';
+                }
+            } catch (err) {
+                showAlert('Network error. Is the server running?', false);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Complete Registration & Start';
+            }
+        });
+    </script>
+</body>
+</html>

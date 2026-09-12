@@ -1,0 +1,1 @@
+- [Python SQLite runtime](python-sqlite-runtime.md) — use the managed Python module and SQLite autocommit to avoid stale constraint locks in this app.

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>SkillBridge - Student Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Include Chart.js for data visualization -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 30px auto; max-width: 960px; padding: 0 20px; line-height: 1.6; background: #f8fafc; color: #1e293b; }
+            .card { background: white; padding: 32px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08); border: 1px solid #e2e8f0; margin-bottom: 24px; }
+            .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 18px; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+            h1 { margin: 0; color: #0f172a; font-size: 26px; }
+            .badge { display: inline-block; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-weight: 600; font-size: 13px; text-transform: uppercase; }
+            .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; }
+            .btn-primary { background: #2563eb; color: white; }
+            .btn-primary:hover { background: #1d4ed8; }
+            .btn-outline { background: white; color: #2563eb; border: 1px solid #2563eb; }
+            .btn-outline:hover { background: #f1f5f9; }
+            .nav-tabs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+            .nav-tab { padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; color: #475569; background: #f1f5f9; transition: all 0.15s ease; }
+            .nav-tab:hover { background: #e2e8f0; color: #0f172a; }
+            .nav-tab.active { background: #2563eb; color: white; }
+
+            /* Gamification Grid & Cards */
+            .gamification-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+            .gam-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; }
+            .gam-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+            .gam-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; }
+            .gam-card-icon { font-size: 22px; }
+            .gam-card-value { font-size: 22px; font-weight: 800; color: #0f172a; margin: 4px 0; }
+            .gam-card-sub { font-size: 12px; color: #64748b; }
+            .xp-bar-wrap { width: 100%; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin: 8px 0; }
+            .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #8b5cf6); border-radius: 999px; transition: width 0.5s ease; }
+
+            /* Skills Grid & Chart */
+            .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+            .skill-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; text-align: center; }
+            .skill-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+            .skill-value { font-size: 24px; font-weight: 800; color: #2563eb; }
+            .chart-wrapper { max-width: 700px; margin: 0 auto 24px auto; background: white; padding: 16px; border-radius: 10px; }
+            
+            /* Section Cards & Tables */
+            .section-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; margin-top: 24px; }
+            .section-card h2 { margin-top: 0; color: #0f172a; font-size: 20px; }
+            .table-wrap { overflow-x: auto; }
+            table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            th { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+            .pill { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
+            .pill-strong { background: #dcfce7; color: #166534; }
+            .pill-developing { background: #fef3c7; color: #92400e; }
+            .pill-needs { background: #fee2e2; color: #991b1b; }
+            .pill-gold { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+            .muted { color: #64748b; }
+            .alert { padding: 16px; border-radius: 8px; margin-bottom: 20px; font-size: 15px; }
+            .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+            /* Badges Grid */
+            .badges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-top: 14px; }
+            .badge-card { border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; transition: all 0.2s ease; }
+            .badge-card.unlocked { background: #ffffff; border: 1px solid #86efac; box-shadow: 0 2px 8px rgba(34,197,94,0.12); }
+            .badge-card.locked { background: #f1f5f9; border: 1px dashed #cbd5e1; opacity: 0.7; }
+            .badge-card-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+            .badge-card-name { font-size: 13px; font-weight: 700; color: #0f172a; margin: 0; }
+            .badge-card-desc { font-size: 11px; color: #64748b; margin: 3px 0 0 0; line-height: 1.4; }
+            .badge-card-xp { font-size: 10px; font-weight: 700; color: #15803d; background: #dcfce7; border-radius: 4px; padding: 1px 6px; display: inline-block; margin-top: 5px; }
+
+            /* Activity Log */
+            .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .activity-item:last-child { border-bottom: none; }
+            .activity-tag { font-weight: 700; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="header-bar">
+                <div>
+                    <h1 id="userName">Student Dashboard</h1>
+                    <span id="userEmail" style="color: #64748b; font-size: 14px;">Loading profile...</span>
+                </div>
+                <div class="nav-tabs">
+                    <a href="/legacy/student" class="nav-tab active">Dashboard</a>
+                    <a href="/legacy/assessment" class="nav-tab">Skill Assessment</a>
+                    <a href="/legacy/leaderboard" class="nav-tab">🏆 Leaderboard</a>
+                    <span class="badge" id="roleBadge">Student</span>
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" onclick="logout()">Log Out</button>
+                </div>
+            </div>
+
+            <!-- GAMIFICATION STATS CARDS -->
+            <div class="gamification-grid" id="gamificationGrid" style="display: none;">
+                <!-- 1. Level & XP Card -->
+                <div class="gam-card" style="border-left: 4px solid #2563eb;">
+                    <div>
+                        <div class="gam-card-header">
+                            <span class="gam-card-label">Level & XP</span>
+                            <span class="gam-card-icon">⚡</span>
+                        </div>
+                        <div class="gam-card-value">Level <span id="gamLevel">1</span></div>
+                        <div style="font-size: 13px; font-weight: 600; color: #2563eb;" id="gamLevelTitle">Novice Explorer</div>
+                        <div class="xp-bar-wrap">
+                            <div class="xp-bar-fill" id="xpBarFill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="gam-card-sub" style="margin-top: 6px;">
+                        <span id="gamXpCurrent">0</span> / <span id="gamXpNext">100</span> XP (<span id="gamXpPct">0%</span>)
+                    </div>
+                </div>
+
+                <!-- 2. Daily Streak Card -->
+                <div class="gam-card" style="border-left: 4px solid #ea580c;">
+                    <div>
+                        <div class="gam-card-header">
+                            <span class="gam-card-label">Learning Streak</span>
+                            <span class="gam-card-icon">🔥</span>
+                        </div>
+                        <div class="gam-card-value"><span id="gamStreak">1</span> Days</div>
+                        <div style="margin-top: 4px;">
+                            <span class="pill pill-strong" id="gamStreakStatus">Active today</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button class="btn btn-outline" id="checkinBtn" style="padding: 4px 10px; font-size: 12px; width: 100%;" onclick="dailyCheckin()">
+                            ⚡ Daily Check-in (+15 XP)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Leaderboard Standing Card -->
+                <div class="gam-card" style="border-left: 4px solid #f59e0b;">
+                    <div>
+                        <div class="gam-card-header">
+                            <span class="gam-card-label">Cohort Rank</span>
+                            <span class="gam-card-icon">🏆</span>
+                        </div>
+                        <div class="gam-card-value">#<span id="gamRank">--</span></div>
+                        <div class="gam-card-sub">Out of <span id="gamTotalStudents">--</span> students</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <a href="/legacy/leaderboard" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; width: 100%; text-decoration: none;">
+                            View Leaderboard →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 4. Badges Card -->
+                <div class="gam-card" style="border-left: 4px solid #10b981;">
+                    <div>
+                        <div class="gam-card-header">
+                            <span class="gam-card-label">Badges Unlocked</span>
+                            <span class="gam-card-icon">⭐</span>
+                        </div>
+                        <div class="gam-card-value"><span id="gamBadgesUnlocked">0</span> / <span id="gamBadgesTotal">10</span></div>
+                        <div class="gam-card-sub">Milestones achieved</div>
+                    </div>
+                    <div id="gamMiniBadges" style="margin-top: 8px; font-size: 18px; display: flex; gap: 4px; overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- UNASSESSED PROMPT -->
+            <div id="unassessedBlock" class="alert alert-warning" style="display: none;">
+                <strong>Benchmark your skills to unlock your employability profile.</strong>
+                <p style="margin: 8px 0 16px 0; font-size: 14px;">Complete the 12-question skill assessment in Python, Java, Web Development, and Data Structures to earn your first +100 XP and achievement badges.</p>
+                <a href="/legacy/assessment" class="btn btn-primary">Take Skill Assessment</a>
+            </div>
+
+            <!-- SKILL PROFILE BLOCK -->
+            <div id="profileBlock" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0; font-size: 20px; color: #0f172a;">Your Skill Profile</h2>
+                    <a href="/legacy/assessment" class="btn btn-outline" style="font-size: 13px; padding: 6px 14px;">Retake Assessment</a>
+                </div>
+
+                <!-- Skill Score Cards -->
+                <div class="skills-grid" id="skillsGrid"></div>
+
+                <!-- Chart.js Visualization -->
+                <div class="chart-wrapper">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- BADGES & MILESTONES SHOWCASE -->
+            <div id="badgesSection" class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <h2 style="margin: 0;">Achievements & Badges</h2>
+                    <span class="muted" style="font-size: 13px;" id="badgesSummaryText">Complete assessments and activities to unlock badges</span>
+                </div>
+                <div class="badges-grid" id="badgesGrid">
+                    <p class="muted">Loading badges...</p>
+                </div>
+            </div>
+
+            <!-- SKILL GAP ANALYSIS -->
+            <div id="gapBlock" class="section-card" style="display: none;">
+                <h2>Skill-gap analysis</h2>
+                <p class="muted">A clear next step for every assessed skill area.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Skill</th><th>Score</th><th>Status</th><th>Recommended next step</th></tr></thead>
+                        <tbody id="gapTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RECOMMENDED OPPORTUNITIES -->
+            <div id="opportunityBlock" class="section-card">
+                <h2>Recommended internships & jobs</h2>
+                <p class="muted">Matched from your real skill scores against employer requirements.</p>
+                <div id="opportunityList"><p class="muted">Loading opportunities...</p></div>
+            </div>
+
+            <!-- APPLICATIONS -->
+            <div id="applicationBlock" class="section-card">
+                <h2>Your applications</h2>
+                <div id="applicationList"><p class="muted">Loading applications...</p></div>
+            </div>
+
+            <!-- RECENT XP ACTIVITIES LOG -->
+            <div id="xpLogSection" class="section-card">
+                <h2>Recent XP & Learning Activity</h2>
+                <div id="xpActivitiesList"><p class="muted">No recent activities recorded.</p></div>
+            </div>
+
+            <h3 style="margin-top: 32px; font-size: 18px; color: #0f172a;">Platform Navigation</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="/legacy/leaderboard" class="btn btn-outline">🏆 View Cohort Leaderboard</a>
+                <a href="/legacy/assessment" class="btn btn-outline">⚡ Take Skill Assessment</a>
+                <a href="#opportunityBlock" class="btn btn-outline">💼 Browse Opportunities</a>
+                <a href="/" class="btn btn-outline">← Home</a>
+            </div>
+        </div>
+
+        <script>
+            const token = localStorage.getItem('skillbridge_token');
+            if (!token) {
+                window.location.href = '/login';
+            }
+
+            function logout() {
+                localStorage.removeItem('skillbridge_token');
+                localStorage.removeItem('skillbridge_user');
+                window.location.href = '/login';
+            }
+
+            async function loadProfile() {
+                try {
+                    const response = await fetch('/api/student/profile', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.status === 401) {
+                        logout();
+                        return;
+                    }
+                    if (response.status === 403) {
+                        alert('This dashboard is only accessible to student accounts.');
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    document.getElementById('userName').textContent = `Welcome, ${data.name}!`;
+                    document.getElementById('userEmail').textContent = data.email;
+
+                    // Render Gamification Stats
+                    if (data.gamification) {
+                        renderGamification(data.gamification);
+                    }
+
+                    if (!data.has_taken_assessment || data.skills.length === 0) {
+                        document.getElementById('unassessedBlock').style.display = 'block';
+                    } else {
+                        document.getElementById('profileBlock').style.display = 'block';
+                        renderSkillScores(data.skills);
+                        renderSkillGaps(data.skill_gaps || []);
+                    }
+                    renderApplications(data.applications || []);
+                    loadOpportunities();
+                } catch (err) {
+                    document.getElementById('applicationList').innerHTML = '<p class="muted">Could not load your dashboard data.</p>';
+                }
+            }
+
+            function renderGamification(g) {
+                document.getElementById('gamificationGrid').style.display = 'grid';
+                document.getElementById('gamLevel').textContent = g.level;
+                document.getElementById('gamLevelTitle').textContent = g.level_title;
+                document.getElementById('xpBarFill').style.width = `${g.progress_percentage}%`;
+                document.getElementById('gamXpCurrent').textContent = g.xp;
+                document.getElementById('gamXpNext').textContent = g.next_threshold;
+                document.getElementById('gamXpPct').textContent = `${g.progress_percentage}%`;
+
+                document.getElementById('gamStreak').textContent = g.streak;
+                const streakStatus = document.getElementById('gamStreakStatus');
+                const checkinBtn = document.getElementById('checkinBtn');
+                if (g.active_today) {
+                    streakStatus.textContent = "✓ Active today";
+                    streakStatus.className = "pill pill-strong";
+                    checkinBtn.disabled = true;
+                    checkinBtn.textContent = "Streak Checked In";
+                } else {
+                    streakStatus.textContent = "Check-in today!";
+                    streakStatus.className = "pill pill-developing";
+                    checkinBtn.disabled = false;
+                }
+
+                document.getElementById('gamRank').textContent = g.rank;
+                document.getElementById('gamTotalStudents').textContent = g.total_students;
+                document.getElementById('gamBadgesUnlocked').textContent = g.unlocked_badges_count;
+                document.getElementById('gamBadgesTotal').textContent = g.total_badges_count;
+
+                // Render badges showcase
+                renderBadges(g.badges || []);
+
+                // Render mini badges in card
+                const mini = document.getElementById('gamMiniBadges');
+                const unlocked = (g.badges || []).filter(b => b.is_unlocked);
+                mini.innerHTML = unlocked.slice(0, 5).map(b => `<span title="${b.name}">${b.icon}</span>`).join('') || '<span class="muted" style="font-size:12px;">Take assessment to unlock</span>';
+
+                // Render recent XP activities
+                renderXpActivities(g.recent_activities || []);
+            }
+
+            function renderBadges(badges) {
+                const grid = document.getElementById('badgesGrid');
+                if (!badges.length) {
+                    grid.innerHTML = '<p class="muted">No badges registered.</p>';
+                    return;
+                }
+                grid.innerHTML = badges.map(b => `
+                    <div class="badge-card ${b.is_unlocked ? 'unlocked' : 'locked'}">
+                        <div class="badge-card-icon">${b.icon}</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="badge-card-name">${b.name}</div>
+                            <div class="badge-card-desc">${b.description}</div>
+                            <div style="display: flex; gap: 6px; align-items: center; margin-top: 6px;">
+                                <span class="badge-card-xp">+${b.xp_bonus} XP</span>
+                                ${b.is_unlocked ? '<span class="pill pill-strong" style="font-size:10px; padding:1px 6px;">Unlocked</span>' : '<span class="pill pill-needs" style="font-size:10px; padding:1px 6px;">Locked 🔒</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderXpActivities(activities) {
+                const list = document.getElementById('xpActivitiesList');
+                if (!activities.length) {
+                    list.innerHTML = '<p class="muted">No recent XP activities recorded yet.</p>';
+                    return;
+                }
+                list.innerHTML = activities.map(a => `
+                    <div class="activity-item">
+                        <div>
+                            <strong>${a.description}</strong>
+                            <div class="muted" style="font-size:11px;">${new Date(a.created_at).toLocaleString()}</div>
+                        </div>
+                        <span class="activity-tag">+${a.xp_earned} XP</span>
+                    </div>
+                `).join('');
+            }
+
+            async function dailyCheckin() {
+                const btn = document.getElementById('checkinBtn');
+                btn.disabled = true;
+                btn.textContent = 'Recording...';
+                try {
+                    const res = await fetch('/api/gamification/checkin', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert(`Streak maintained! 🔥 ${data.streak} Days. You earned +${data.bonus_xp} XP!`);
+                        loadProfile();
+                    } else {
+                        alert(data.detail || 'Could not record check-in.');
+                        btn.disabled = false;
+                    }
+                } catch (e) {
+                    btn.disabled = false;
+                    alert('Network error while checking in.');
+                }
+            }
+
+            function renderSkillScores(skills) {
+                const grid = document.getElementById('skillsGrid');
+                let gridHtml = '';
+                const labels = [];
+                const scores = [];
+
+                skills.forEach(s => {
+                    labels.push(s.skill_name);
+                    scores.push(s.score);
+                    gridHtml += `
+                        <div class="skill-box">
+                            <div class="skill-title">${s.skill_name}</div>
+                            <div class="skill-value">${s.score}%</div>
+                        </div>
+                    `;
+                });
+                grid.innerHTML = gridHtml;
+
+                const ctx = document.getElementById('skillsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Proficiency Score (%)',
+                            data: scores,
+                            backgroundColor: [
+                                'rgba(37, 99, 235, 0.85)',
+                                'rgba(16, 185, 129, 0.85)',
+                                'rgba(245, 158, 11, 0.85)',
+                                'rgba(139, 92, 246, 0.85)'
+                            ],
+                            borderColor: ['#1d4ed8', '#059669', '#d97706', '#7c3aed'],
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: { callback: function(value) { return value + "%"; } },
+                                title: { display: true, text: 'Proficiency Score (%)' }
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderSkillGaps(gaps) {
+                const table = document.getElementById('gapTable');
+                table.innerHTML = gaps.map(gap => {
+                    const statusClass = gap.status === 'Strong' ? 'pill-strong' : (gap.status === 'Developing' ? 'pill-developing' : 'pill-needs');
+                    return `<tr><td><strong>${gap.skill_name}</strong></td><td>${gap.score}%</td><td><span class="pill ${statusClass}">${gap.status}</span></td><td class="muted">${gap.improvement}</td></tr>`;
+                }).join('');
+                document.getElementById('gapBlock').style.display = gaps.length ? 'block' : 'none';
+            }
+
+            async function loadOpportunities() {
+                try {
+                    const response = await fetch('/api/opportunities', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const opportunities = await response.json();
+                    const list = document.getElementById('opportunityList');
+                    if (!response.ok || !opportunities.length) {
+                        list.innerHTML = '<p class="muted">No internships are available yet. Check back after an industry partner posts one.</p>';
+                        return;
+                    }
+                    list.innerHTML = opportunities.map(opportunity => `
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <div><strong>${opportunity.title}</strong><div class="muted">${opportunity.company_name}</div></div>
+                                <strong style="color:#2563eb;">${opportunity.match_percentage}% Skill Match</strong>
+                            </div>
+                            <p style="margin: 10px 0; font-size: 14px;">${opportunity.description || 'No description provided.'}</p>
+                            <div class="muted" style="font-size:13px;">${opportunity.skill_matches.map(match => `${match.status === 'Strong match' ? '✓' : '⚠'} ${match.skill_name}: ${match.current_score}% / ${match.required_score}%`).join(' · ')}</div>
+                            <button class="btn btn-primary" style="margin-top:12px; padding:7px 14px; font-size:13px;" onclick="applyToOpportunity(${opportunity.id}, this)">Apply (+30 XP)</button>
+                        </div>
+                    `).join('');
+                } catch (err) {
+                    document.getElementById('opportunityList').innerHTML = '<p class="muted">Could not load internships right now.</p>';
+                }
+            }
+
+            async function applyToOpportunity(id, button) {
+                button.disabled = true;
+                try {
+                    const response = await fetch(`/api/opportunities/${id}/apply`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        button.textContent = 'Applied ✓ (+30 XP)';
+                        loadProfile();
+                    } else {
+                        button.disabled = false;
+                        button.textContent = data.detail || 'Could not apply';
+                    }
+                } catch (err) {
+                    button.disabled = false;
+                    button.textContent = 'Try again';
+                }
+            }
+
+            function renderApplications(applications) {
+                const list = document.getElementById('applicationList');
+                if (!applications.length) {
+                    list.innerHTML = '<p class="muted">You have not applied to an internship yet.</p>';
+                    return;
+                }
+                list.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Opportunity</th><th>Company</th><th>Status</th><th>Applied</th></tr></thead><tbody>${
+                    applications.map(application => `<tr><td><strong>${application.title}</strong></td><td>${application.company_name}</td><td><span class="pill pill-developing">${application.status}</span></td><td class="muted">${new Date(application.applied_at).toLocaleDateString()}</td></tr>`).join('')
+                }</tbody></table></div>`;
+            }
+
+            loadProfile();
+        </script>
+    </body>
+    </html>

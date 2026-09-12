@@ -1,0 +1,515 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.5.0
+  description: SkillBridge academia–industry collaboration API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: auth
+  - name: assessment
+  - name: student
+  - name: opportunities
+  - name: industry
+  - name: institution
+  - name: health
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterInput"
+      responses:
+        "201":
+          description: Registered user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthRegistration"
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginInput"
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLogin"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /assessment:
+    get:
+      operationId: getAssessment
+      tags: [assessment]
+      responses:
+        "200":
+          description: Client-safe assessment questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssessmentQuestion"
+  /assessment/submit:
+    post:
+      operationId: submitAssessment
+      tags: [assessment]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentSubmissionInput"
+      responses:
+        "200":
+          description: Updated skill profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+  /student/profile:
+    get:
+      operationId: getStudentProfile
+      tags: [student]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Logged-in student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+  /student/skill-gaps:
+    get:
+      operationId: getStudentSkillGaps
+      tags: [student]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Explainable skill gaps
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillGapResponse"
+  /student/applications:
+    get:
+      operationId: getStudentApplications
+      tags: [student]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Applications owned by the current student
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+  /skills:
+    get:
+      operationId: listSkills
+      tags: [opportunities]
+      responses:
+        "200":
+          description: Shared skill catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Skill"
+  /opportunities:
+    get:
+      operationId: listOpportunities
+      tags: [opportunities]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Recommended opportunities with student match scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpportunityWithMatch"
+    post:
+      operationId: createOpportunity
+      tags: [opportunities]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityInput"
+      responses:
+        "201":
+          description: Created opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+  /opportunities/mine:
+    get:
+      operationId: listMyOpportunities
+      tags: [opportunities]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Opportunities owned by the current industry user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+  /opportunities/{opportunity_id}:
+    get:
+      operationId: getOpportunity
+      tags: [opportunities]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/OpportunityId"
+      responses:
+        "200":
+          description: Opportunity detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpportunityWithMatch"
+  /opportunities/{opportunity_id}/apply:
+    post:
+      operationId: applyToOpportunity
+      tags: [opportunities]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/OpportunityId"
+      responses:
+        "201":
+          description: Submitted application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationResponse"
+  /industry/opportunities/{opportunity_id}/applicants:
+    get:
+      operationId: listOpportunityApplicants
+      tags: [industry]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/OpportunityId"
+      responses:
+        "200":
+          description: Applicants for an owned opportunity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicantsResponse"
+  /applications/{application_id}/status:
+    patch:
+      operationId: updateApplicationStatus
+      tags: [industry]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationStatusInput"
+      responses:
+        "200":
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationResponse"
+  /institution/stats:
+    get:
+      operationId: getInstitutionStats
+      tags: [institution]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Aggregate readiness statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionStats"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    OpportunityId:
+      name: opportunity_id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    ApplicationId:
+      name: application_id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+        database: { type: string }
+        tables: { type: array, items: { type: string } }
+        foreign_keys: { type: string }
+      required: [status]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [student, industry, academician, institution] }
+        created_at: { type: ["string", "null"] }
+      required: [id, name, email, role]
+    UserRegisterInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6, maxLength: 128 }
+        role: { type: string, enum: [student, industry, academician, institution] }
+      required: [name, email, password, role]
+    UserLoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+      required: [email, password]
+    AuthRegistration:
+      type: object
+      properties:
+        message: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+      required: [message, user]
+    AuthLogin:
+      type: object
+      properties:
+        access_token: { type: string }
+        token_type: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+      required: [access_token, token_type, user]
+    Skill:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+      required: [id, name]
+    SkillScore:
+      type: object
+      properties:
+        skill_id: { type: integer }
+        skill_name: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+      required: [skill_id, skill_name, score]
+    SkillGap:
+      allOf:
+        - $ref: "#/components/schemas/SkillScore"
+        - type: object
+          properties:
+            status: { type: string, enum: [Strong, Developing, Needs Improvement] }
+            improvement: { type: string }
+          required: [status, improvement]
+    AssessmentQuestion:
+      type: object
+      properties:
+        id: { type: integer }
+        skill: { type: string }
+        question: { type: string }
+        options: { type: array, items: { type: string }, minItems: 4, maxItems: 4 }
+      required: [id, skill, question, options]
+    AssessmentSubmissionInput:
+      type: object
+      properties:
+        answers:
+          type: object
+          additionalProperties: { type: integer, minimum: 0, maximum: 3 }
+      required: [answers]
+    AssessmentResult:
+      type: object
+      properties:
+        message: { type: string }
+        student_id: { type: integer }
+        skills: { type: array, items: { $ref: "#/components/schemas/SkillScore" } }
+      required: [message, student_id, skills]
+    StudentProfile:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string }
+        has_taken_assessment: { type: boolean }
+        overall_readiness: { type: integer }
+        skills: { type: array, items: { $ref: "#/components/schemas/SkillScore" } }
+        skill_gaps: { type: array, items: { $ref: "#/components/schemas/SkillGap" } }
+        applications: { type: array, items: { $ref: "#/components/schemas/Application" } }
+      required: [id, name, email, role, has_taken_assessment, skills, skill_gaps, applications]
+    SkillGapResponse:
+      type: object
+      properties:
+        overall_readiness: { type: integer }
+        skill_gaps: { type: array, items: { $ref: "#/components/schemas/SkillGap" } }
+      required: [overall_readiness, skill_gaps]
+    OpportunitySkillInput:
+      type: object
+      properties:
+        skill_id: { type: integer, minimum: 1 }
+        required_score: { type: integer, minimum: 0, maximum: 100, default: 50 }
+      required: [skill_id]
+    OpportunityInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, maxLength: 3000 }
+        company_name: { type: string, minLength: 1, maxLength: 150 }
+        required_skills:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: "#/components/schemas/OpportunitySkillInput" }
+      required: [title, description, company_name, required_skills]
+    OpportunitySkill:
+      type: object
+      properties:
+        skill_id: { type: integer }
+        skill_name: { type: string }
+        required_score: { type: integer }
+      required: [skill_id, skill_name, required_score]
+    Opportunity:
+      type: object
+      properties:
+        id: { type: integer }
+        industry_id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        company_name: { type: string }
+        opportunity_type: { type: string }
+        created_at: { type: ["string", "null"] }
+        required_skills: { type: array, items: { $ref: "#/components/schemas/OpportunitySkill" } }
+      required: [id, industry_id, title, description, company_name, opportunity_type, required_skills]
+    SkillMatch:
+      type: object
+      properties:
+        skill_name: { type: string }
+        required_score: { type: integer }
+        current_score: { type: integer }
+        match_score: { type: integer }
+        status: { type: string }
+      required: [skill_name, required_score, current_score, match_score, status]
+    OpportunityWithMatch:
+      allOf:
+        - $ref: "#/components/schemas/Opportunity"
+        - type: object
+          properties:
+            match_percentage: { type: integer }
+            skill_matches: { type: array, items: { $ref: "#/components/schemas/SkillMatch" } }
+          required: [match_percentage, skill_matches]
+    Application:
+      type: object
+      properties:
+        id: { type: integer }
+        student_id: { type: integer }
+        opportunity_id: { type: integer }
+        status: { type: string }
+        applied_at: { type: ["string", "null"] }
+        title: { type: string }
+        company_name: { type: string }
+      required: [id, student_id, opportunity_id, status]
+    ApplicationResponse:
+      type: object
+      properties:
+        message: { type: string }
+        application: { $ref: "#/components/schemas/Application" }
+      required: [message, application]
+    ApplicationStatusInput:
+      type: object
+      properties:
+        status: { type: string, enum: [applied, shortlisted, rejected, accepted] }
+      required: [status]
+    Applicant:
+      type: object
+      properties:
+        application_id: { type: integer }
+        student_id: { type: integer }
+        opportunity_id: { type: integer }
+        status: { type: string }
+        applied_at: { type: ["string", "null"] }
+        name: { type: string }
+        email: { type: string }
+        skills: { type: array, items: { $ref: "#/components/schemas/SkillScore" } }
+        match_percentage: { type: integer }
+        skill_matches: { type: array, items: { $ref: "#/components/schemas/SkillMatch" } }
+      required: [application_id, student_id, opportunity_id, status, name, email, skills, match_percentage, skill_matches]
+    ApplicantsResponse:
+      type: object
+      properties:
+        opportunity: { $ref: "#/components/schemas/Opportunity" }
+        applicants: { type: array, items: { $ref: "#/components/schemas/Applicant" } }
+      required: [opportunity, applicants]
+    InstitutionSkill:
+      type: object
+      properties:
+        skill_name: { type: string }
+        assessed_students: { type: integer }
+        average_score: { type: number }
+        needs_improvement: { type: integer }
+        strong_students: { type: integer }
+      required: [skill_name, assessed_students, average_score, needs_improvement, strong_students]
+    InstitutionStats:
+      type: object
+      properties:
+        student_count: { type: integer }
+        assessed_student_count: { type: integer }
+        overall_readiness: { type: number }
+        skills: { type: array, items: { $ref: "#/components/schemas/InstitutionSkill" } }
+        strongest_skill: { allOf: [{ $ref: "#/components/schemas/InstitutionSkill" }], nullable: true }
+        common_skill_gap: { allOf: [{ $ref: "#/components/schemas/InstitutionSkill" }], nullable: true }
+      required: [student_count, assessed_student_count, overall_readiness, skills]

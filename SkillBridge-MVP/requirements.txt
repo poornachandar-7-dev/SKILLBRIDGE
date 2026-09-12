@@ -1,0 +1,12 @@
+fastapi
+pydantic
+bcrypt
+PyJWT
+python-dotenv
+uvicorn
+bcrypt
+fastapi
+pydantic
+PyJWT
+python-dotenv
+uvicorn

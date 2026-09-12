@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>SkillBridge - Skill Assessment</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px auto; max-width: 720px; padding: 0 20px; line-height: 1.6; background: #f8fafc; color: #1e293b; }
+            .card { background: white; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; margin-bottom: 24px; }
+            h1 { margin-top: 0; color: #0f172a; font-size: 26px; }
+            .skill-header { background: #eff6ff; color: #1e40af; padding: 10px 16px; border-radius: 8px; font-weight: 700; margin-top: 24px; margin-bottom: 16px; font-size: 18px; border-left: 4px solid #2563eb; }
+            .question-block { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; }
+            .question-title { font-weight: 600; margin-bottom: 10px; font-size: 15px; }
+            .option-label { display: block; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; transition: background 0.15s; font-size: 14px; }
+            .option-label:hover { background: #f1f5f9; }
+            .option-label input { margin-right: 8px; }
+            button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; }
+            button:hover { background: #1d4ed8; }
+            button:disabled { background: #94a3b8; cursor: not-allowed; }
+            .alert { padding: 14px; border-radius: 8px; margin-bottom: 20px; display: none; font-size: 15px; }
+            .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+            .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+            .score-card { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 18px; border-radius: 8px; margin-bottom: 8px; }
+            .score-badge { font-weight: 700; font-size: 16px; color: #2563eb; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>SkillBridge Skill Assessment</h1>
+            <p style="color: #64748b;">Answer 12 multiple-choice questions (3 questions per skill) to evaluate your proficiency in Python, Java, Web Development, and Data Structures.</p>
+
+            <div id="authAlert" class="alert alert-error">
+                You must be logged in as a <strong>Student</strong> to take this assessment.
+                <br><br>
+                <a href="/login"><button type="button">Log In</button></a>
+                <a href="/register" style="margin-left: 12px;">Create Account</a>
+            </div>
+
+            <div id="feedbackAlert" class="alert"></div>
+
+            <form id="assessmentForm" style="display: none;">
+                <div id="questionsContainer"></div>
+                <br>
+                <button type="submit" id="submitBtn">Submit Assessment</button>
+            </form>
+
+            <div id="resultsContainer" style="display: none;">
+                <h2 style="color: #0f172a; margin-top: 0;">Assessment Results</h2>
+                <p>Here is your calculated skill profile based on your answers:</p>
+                <div id="scoreCards"></div>
+                <br>
+                <a href="/student"><button type="button">View Student Profile & Chart</button></a>
+                <button type="button" onclick="location.reload()" style="background: white; color: #2563eb; border: 1px solid #2563eb; margin-left: 8px;">Retake Assessment</button>
+            </div>
+        </div>
+
+        <script>
+            const token = localStorage.getItem('skillbridge_token');
+            const authAlert = document.getElementById('authAlert');
+            const feedbackAlert = document.getElementById('feedbackAlert');
+            const assessmentForm = document.getElementById('assessmentForm');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const scoreCards = document.getElementById('scoreCards');
+
+            // 1. Check authentication on load
+            if (!token) {
+                authAlert.style.display = 'block';
+            } else {
+                loadQuestions();
+            }
+
+            async function loadQuestions() {
+                try {
+                    const response = await fetch('/api/assessment');
+                    const questions = await response.json();
+
+                    let currentSkill = '';
+                    let html = '';
+
+                    questions.forEach((q, idx) => {
+                        if (q.skill !== currentSkill) {
+                            currentSkill = q.skill;
+                            html += `<div class="skill-header">${currentSkill}</div>`;
+                        }
+
+                        html += `
+                            <div class="question-block">
+                                <div class="question-title">${idx + 1}. ${q.question}</div>
+                        `;
+
+                        q.options.forEach((opt, optIdx) => {
+                            html += `
+                                <label class="option-label">
+                                    <input type="radio" name="question_${q.id}" value="${optIdx}" required>
+                                    ${opt}
+                                </label>
+                            `;
+                        });
+
+                        html += `</div>`;
+                    });
+
+                    questionsContainer.innerHTML = html;
+                    assessmentForm.style.display = 'block';
+                } catch (err) {
+                    feedbackAlert.textContent = 'Failed to load questions. Is the server running?';
+                    feedbackAlert.className = 'alert alert-error';
+                    feedbackAlert.style.display = 'block';
+                }
+            }
+
+            assessmentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Evaluating on server...';
+
+                // Gather answers
+                const answers = {};
+                const formData = new FormData(assessmentForm);
+                for (let [key, value] of formData.entries()) {
+                    if (key.startsWith('question_')) {
+                        const qid = key.replace('question_', '');
+                        answers[qid] = parseInt(value);
+                    }
+                }
+
+                try {
+                    const response = await fetch('/api/assessment/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ answers })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        assessmentForm.style.display = 'none';
+                        renderResults(data.skills);
+                    } else {
+                        feedbackAlert.textContent = data.detail || 'Submission failed.';
+                        feedbackAlert.className = 'alert alert-error';
+                        feedbackAlert.style.display = 'block';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Assessment';
+                    }
+                } catch (err) {
+                    feedbackAlert.textContent = 'Network error while submitting answers.';
+                    feedbackAlert.className = 'alert alert-error';
+                    feedbackAlert.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Assessment';
+                }
+            });
+
+            function renderResults(skills) {
+                let cardsHtml = '';
+                skills.forEach(s => {
+                    cardsHtml += `
+                        <div class="score-card">
+                            <span style="font-weight: 600;">${s.skill_name}</span>
+                            <span class="score-badge">${s.score}%</span>
+                        </div>
+                    `;
+                });
+                scoreCards.innerHTML = cardsHtml;
+                resultsContainer.style.display = 'block';
+            }
+        </script>
+    </body>
+    </html>

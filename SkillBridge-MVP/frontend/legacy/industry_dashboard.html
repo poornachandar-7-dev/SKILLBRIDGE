@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>SkillBridge - Industry Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            :root { color-scheme: light; }
+            * { box-sizing: border-box; }
+            body { margin: 0; background: #f8fafc; color: #172033; font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+            .shell { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+            .topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+            h1 { margin:0; font-size:32px; letter-spacing:-.03em; } h2 { margin-top:0; }
+            .muted { color:#64748b; } .card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 10px 30px rgba(15,23,42,.05); margin-bottom:20px; }
+            .grid { display:grid; grid-template-columns: minmax(280px, .8fr) minmax(360px, 1.2fr); gap:20px; align-items:start; }
+            label { display:block; font-size:13px; font-weight:700; margin:14px 0 6px; } input, textarea { width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:9px; font:inherit; } textarea { min-height:96px; resize:vertical; }
+            button, .btn { display:inline-block; border:0; border-radius:9px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; } .primary { color:#fff; background:#2563eb; } .secondary { color:#2563eb; background:#eff6ff; }
+            .skill-row { display:grid; grid-template-columns:1fr 90px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; } .skill-row label { margin:0; font-weight:600; }
+            .skill-row input[type=number] { padding:7px; } .opportunity { border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin:12px 0; } .opportunity h3 { margin:0 0 3px; }
+            .status { border:1px solid #cbd5e1; border-radius:7px; padding:7px; background:#fff; } .alert { padding:12px; border-radius:8px; margin-bottom:14px; display:none; } .error { background:#fee2e2; color:#991b1b; } .success { background:#dcfce7; color:#166534; }
+            @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .topbar { align-items:flex-start; flex-direction:column; } }
+        </style>
+    </head>
+    <body>
+        <main class="shell">
+            <div class="topbar"><div><div class="muted">SkillBridge · Industry</div><h1>Industry Dashboard</h1></div><button class="secondary" onclick="logout()">Log out</button></div>
+            <div id="feedback" class="alert"></div>
+            <div class="grid">
+                <section class="card">
+                    <h2>Post an internship</h2>
+                    <p class="muted">Describe the opportunity and set a transparent minimum score for each required skill.</p>
+                    <form id="opportunityForm">
+                        <label for="company">Company / organization</label><input id="company" required maxlength="150" placeholder="e.g. TechNova Labs">
+                        <label for="title">Opportunity title</label><input id="title" required maxlength="150" placeholder="e.g. Python Backend Intern">
+                        <label for="description">Description</label><textarea id="description" maxlength="3000" placeholder="What will the intern work on?"></textarea>
+                        <label>Required skills <span class="muted">(select at least one)</span></label>
+                        <div id="skillPicker">Loading skills...</div>
+                        <button class="primary" style="margin-top:18px;" id="postButton">Post internship</button>
+                    </form>
+                </section>
+                <section class="card">
+                    <h2>Posted opportunities</h2>
+                    <p class="muted">Review applicants and update their application status.</p>
+                    <div id="myOpportunities">Loading opportunities...</div>
+                </section>
+            </div>
+            <section class="card" id="applicantCard" style="display:none;"><h2 id="applicantTitle">Applicants</h2><div id="applicantList"></div></section>
+        </main>
+        <script>
+            const token = localStorage.getItem('skillbridge_token');
+            if (!token) window.location.href = '/login';
+            const auth = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+            function logout() { localStorage.removeItem('skillbridge_token'); localStorage.removeItem('skillbridge_user'); window.location.href='/login'; }
+            function showFeedback(message, good) { const box=document.getElementById('feedback'); box.textContent=message; box.className='alert '+(good?'success':'error'); box.style.display='block'; }
+            async function loadSkills() {
+                const response=await fetch('/api/skills'); const skills=await response.json();
+                document.getElementById('skillPicker').innerHTML=skills.map(skill => `<div class="skill-row"><label><input type="checkbox" value="${skill.id}"> ${skill.name}</label><input type="number" min="0" max="100" value="50" aria-label="Minimum score for ${skill.name}"></div>`).join('');
+            }
+            async function loadOpportunities() {
+                const response=await fetch('/api/opportunities/mine',{headers:{'Authorization':`Bearer ${token}`}});
+                const opportunities=await response.json(); const target=document.getElementById('myOpportunities');
+                if (!opportunities.length) { target.innerHTML='<p class="muted">No opportunities posted yet.</p>'; return; }
+                target.innerHTML=opportunities.map(op => `<article class="opportunity"><h3>${op.title}</h3><div class="muted">${op.company_name} · ${op.required_skills.map(s=>s.skill_name+' ≥ '+s.required_score+'%').join(', ')}</div><p>${op.description || 'No description provided.'}</p><button class="secondary" onclick="showApplicants(${op.id}, '${op.title.replace(/'/g, "\'")}')">View applicants</button></article>`).join('');
+            }
+            async function showApplicants(id, title) {
+                const response=await fetch(`/api/industry/opportunities/${id}/applicants`,{headers:{'Authorization':`Bearer ${token}`}});
+                const data=await response.json(); const card=document.getElementById('applicantCard'); card.style.display='block'; document.getElementById('applicantTitle').textContent=`Applicants · ${title}`;
+                const target=document.getElementById('applicantList');
+                if (!data.applicants || !data.applicants.length) { target.innerHTML='<p class="muted">No applications yet.</p>'; return; }
+                target.innerHTML=data.applicants.map(app => `<div class="opportunity"><strong>${app.name}</strong> <span class="muted">${app.email}</span><div style="margin:8px 0;color:#2563eb;font-weight:700;">${app.match_percentage}% Skill Match</div><div class="muted">${app.skills.map(s=>s.skill_name+': '+s.score+'%').join(' · ')}</div><label>Application status</label><select class="status" onchange="updateStatus(${app.application_id},this.value)"><option ${app.status==='applied'?'selected':''} value="applied">Applied</option><option ${app.status==='shortlisted'?'selected':''} value="shortlisted">Shortlisted</option><option ${app.status==='rejected'?'selected':''} value="rejected">Rejected</option><option ${app.status==='accepted'?'selected':''} value="accepted">Accepted</option></select></div>`).join('');
+            }
+            async function updateStatus(id, statusValue) {
+                const response=await fetch(`/api/applications/${id}/status`,{method:'PATCH',headers:auth,body:JSON.stringify({status:statusValue})});
+                if (response.ok) showFeedback('Application status updated.',true); else showFeedback('Could not update that application.',false);
+            }
+            document.getElementById('opportunityForm').addEventListener('submit', async event => {
+                event.preventDefault(); const rows=[...document.querySelectorAll('#skillPicker .skill-row')]; const required_skills=rows.filter(row=>row.querySelector('input[type=checkbox]').checked).map(row=>({skill_id:Number(row.querySelector('input[type=checkbox]').value),required_score:Number(row.querySelector('input[type=number]').value)}));
+                const button=document.getElementById('postButton'); button.disabled=true;
+                const response=await fetch('/api/opportunities',{method:'POST',headers:auth,body:JSON.stringify({company_name:document.getElementById('company').value,title:document.getElementById('title').value,description:document.getElementById('description').value,required_skills})});
+                const data=await response.json(); button.disabled=false;
+                if (response.ok) { showFeedback('Internship posted successfully.',true); event.target.reset(); await loadOpportunities(); } else showFeedback(data.detail || 'Could not post internship.',false);
+            });
+            loadSkills(); loadOpportunities();
+        </script>
+    </body>
+    </html>

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SkillBridge"
+description = "A role-based academia–industry collaboration portal where students assess skills, discover matched internships, and track applications while industry and institutions act on real readiness data."
+version = "1.0.0"
+id = "artifacts/skillbridge-app"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25139
+
+[services.development]
+run = "pnpm --filter @workspace/skillbridge-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/skillbridge-app", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/skillbridge-app/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25139"
+BASE_PATH = "/"
